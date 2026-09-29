@@ -1,0 +1,406 @@
+{% extends "base.html" %}
+
+{% block title %}Email Details{% endblock %}
+
+{% block content %}
+
+<div class="detail-container">
+
+    <!-- Header -->
+
+    <div class="detail-header">
+
+        <div>
+            <h1>Email Details</h1>
+            <p>Email #{{ email.id }}</p>
+        </div>
+
+    </div>
+
+
+    <!-- Email Details Card -->
+
+    <div class="email-detail-card">
+
+
+        <!-- Recipient -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Recipient
+            </div>
+
+            <div class="detail-value">
+                {{ email.recipient }}
+            </div>
+
+        </div>
+
+
+        <!-- CC -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                CC
+            </div>
+
+            <div class="detail-value">
+
+                {% if email.cc %}
+                    {{ email.cc }}
+                {% else %}
+                    -
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Subject -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Subject
+            </div>
+
+            <div class="detail-value">
+                {{ email.subject }}
+            </div>
+
+        </div>
+
+
+        <!-- Status -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Status
+            </div>
+
+            <div class="detail-value">
+
+                {% if email.status == "SENT" %}
+
+                    <span class="status status-sent">
+                        SENT
+                    </span>
+
+                {% elif email.status == "FAILED" %}
+
+                    <span class="status status-failed">
+                        FAILED
+                    </span>
+
+                {% else %}
+
+                    <span class="status status-pending">
+                        {{ email.status }}
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Date -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Date
+            </div>
+
+            <div class="detail-value">
+
+                {% if email.created_at %}
+                    {{ email.created_at.strftime('%d-%m-%Y %H:%M:%S') }}
+                {% else %}
+                    -
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Sent At -->
+
+        {% if email.sent_at %}
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Sent At
+            </div>
+
+            <div class="detail-value">
+                {{ email.sent_at.strftime('%d-%m-%Y %H:%M:%S') }}
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+        <!-- Error -->
+
+        {% if email.error_message %}
+
+        <div class="error-section">
+
+            <div class="error-title">
+                Error Message
+            </div>
+
+            <div class="error-message">
+                {{ email.error_message }}
+            </div>
+
+        </div>
+
+        {% endif %}
+
+
+    </div>
+
+
+    <!-- Bottom Button -->
+
+    <div class="bottom-actions">
+
+        <a
+            href="{{ url_for('email.history') }}"
+            class="btn-secondary"
+        >
+            ← Back to History
+        </a>
+
+        <a
+            href="{{ url_for('email.send') }}"
+            class="btn-primary"
+        >
+            + Send Email
+        </a>
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* Container */
+
+.detail-container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+
+/* Header */
+
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.detail-header h1 {
+    margin: 0;
+    color: #19324d;
+    font-size: 32px;
+}
+
+.detail-header p {
+    margin: 6px 0 0;
+    color: #667085;
+    font-size: 15px;
+}
+
+
+/* Back */
+
+.back-button {
+    text-decoration: none;
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+}
+
+
+/* Card */
+
+.email-detail-card {
+    background: white;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+
+/* Detail row */
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    min-height: 65px;
+    border-bottom: 1px solid #eaecf0;
+}
+
+
+.detail-label {
+    background: #f7f9fc;
+    padding: 20px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #19324d;
+}
+
+
+.detail-value {
+    padding: 20px;
+    font-size: 15px;
+    color: #344054;
+    word-break: break-word;
+}
+
+
+/* Status */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-sent {
+    color: #087443;
+    background: #dcfae6;
+}
+
+.status-failed {
+    color: #b42318;
+    background: #fee4e2;
+}
+
+.status-pending {
+    color: #b54708;
+    background: #fef0c7;
+}
+
+
+/* Error */
+
+.error-section {
+    padding: 22px;
+    background: #fff7f7;
+    border-top: 1px solid #eaecf0;
+}
+
+.error-title {
+    color: #b42318;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.error-message {
+    color: #912018;
+    background: #fee4e2;
+    border-radius: 8px;
+    padding: 14px;
+    font-size: 14px;
+    word-break: break-word;
+}
+
+
+/* Bottom buttons */
+
+.bottom-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 25px;
+}
+
+.btn-primary,
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 11px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.btn-primary {
+    background: #4285f4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #357ae8;
+}
+
+.btn-secondary {
+    background: white;
+    color: #19324d;
+    border: 1px solid #d8dee8;
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .detail-row {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-label {
+        padding: 12px 16px 7px;
+        border-bottom: 0;
+    }
+
+    .detail-value {
+        padding: 7px 16px 16px;
+    }
+
+    .bottom-actions {
+        flex-direction: column;
+    }
+
+    .bottom-actions a {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+}
+
+</style>
+
+{% endblock %}

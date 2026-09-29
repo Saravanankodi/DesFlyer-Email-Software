@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}
+DesFlyer | Send Email
+{% endblock %}
+
+
+{% block content %}
+
+<div class="email-page">
+
+    <div class="email-card">
+
+        <div class="email-header">
+
+            <h1>Send Email</h1>
+
+            <p>
+                Send an email through DesFlyer
+            </p>
+
+        </div>
+
+
+        {% with messages = get_flashed_messages(
+            with_categories=true
+        ) %}
+
+            {% if messages %}
+
+                {% for category, message in messages %}
+
+                    <div class="flash-message {{ category }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            {% endif %}
+
+        {% endwith %}
+
+
+        <form
+            method="POST"
+            action="{{ url_for('email.send') }}"
+        >
+
+
+            <div class="form-group">
+
+                <label for="recipient">
+                    Recipient Email
+                </label>
+
+                <input
+                    type="email"
+                    id="recipient"
+                    name="recipient"
+                    placeholder="recipient@example.com"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="cc">
+                    CC
+                </label>
+
+                <input
+                    type="text"
+                    id="cc"
+                    name="cc"
+                    placeholder="person1@example.com, person2@example.com"
+                >
+
+                <small>
+                    Separate multiple CC addresses with commas.
+                </small>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="subject">
+                    Subject
+                </label>
+
+                <input
+                    type="text"
+                    id="subject"
+                    name="subject"
+                    placeholder="Enter email subject"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="body">
+                    Message
+                </label>
+
+                <textarea
+                    id="body"
+                    name="body"
+                    rows="12"
+                    placeholder="Write your email..."
+                    required
+                ></textarea>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="login-button"
+            >
+                Send Email
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

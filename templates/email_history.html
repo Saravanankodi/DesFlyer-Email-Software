@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Email History{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- Header -->
+    <div class="page-header">
+        <div>
+            <h1>Email History</h1>
+            <p>View and manage your email activity</p>
+        </div>
+
+    </div>
+
+
+    <!-- Search / Filter -->
+    <div class="filter-card">
+
+        <form method="GET" action="{{ url_for('email.history') }}">
+
+            <div class="filter-row">
+
+                <div class="filter-group">
+                    <label for="search">Search</label>
+
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ request.args.get('search', '') }}"
+                        placeholder="Recipient or subject"
+                    >
+                </div>
+
+
+                <div class="filter-group">
+                    <label for="status">Status</label>
+
+                    <select id="status" name="status">
+
+                        <option value="ALL"
+                            {% if request.args.get('status', 'ALL') == 'ALL' %}
+                                selected
+                            {% endif %}
+                        >
+                            All Status
+                        </option>
+
+                        <option value="SENT"
+                            {% if request.args.get('status') == 'SENT' %}
+                                selected
+                            {% endif %}
+                        >
+                            Sent
+                        </option>
+
+                        <option value="FAILED"
+                            {% if request.args.get('status') == 'FAILED' %}
+                                selected
+                            {% endif %}
+                        >
+                            Failed
+                        </option>
+
+                        <option value="PENDING"
+                            {% if request.args.get('status') == 'PENDING' %}
+                                selected
+                            {% endif %}
+                        >
+                            Pending
+                        </option>
+
+                    </select>
+                </div>
+
+
+                <div class="filter-button">
+                    <button type="submit" class="btn btn-primary">
+                        Search
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    <!-- Email Records -->
+    <div class="records-card">
+
+        <div class="records-header">
+            <div>
+                <h2>Email Records</h2>
+
+                <p>
+                    {{ emails|length }} record(s) found
+                </p>
+            </div>
+        </div>
+
+
+        {% if emails %}
+
+        <div class="table-wrapper">
+
+            <table class="email-table">
+
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Recipient</th>
+                        <th>Subject</th>
+                        <th>CC</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                    {% for email in emails %}
+
+                    <tr>
+
+                        <td>
+                            #{{ email.id }}
+                        </td>
+
+
+                        <td>
+                            {{ email.recipient }}
+                        </td>
+
+
+                        <td>
+                            {{ email.subject }}
+                        </td>
+
+
+                        <td>
+                            {% if email.cc %}
+                                {{ email.cc }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+
+                            {% if email.status == "SENT" %}
+
+                                <span class="status status-sent">
+                                    SENT
+                                </span>
+
+                            {% elif email.status == "FAILED" %}
+
+                                <span class="status status-failed">
+                                    FAILED
+                                </span>
+
+                            {% else %}
+
+                                <span class="status status-pending">
+                                    {{ email.status }}
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+                            {% if email.created_at %}
+                                {{ email.created_at.strftime('%d-%m-%Y %H:%M') }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+
+                            <a
+                                href="{{ url_for('email.email_detail', email_id=email.id) }}"
+                                class="view-link"
+                            >
+                                View
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+        <div class="empty-state">
+            <h3>No Email Records</h3>
+            <p>No email activity has been recorded yet.</p>
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+<style>
+
+/* Main page */
+
+.page-container {
+    width: 100%;
+    max-width: 1500px;
+    margin: 0 auto;
+}
+
+
+/* Header */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #19324d;
+}
+
+.page-header p {
+    margin: 6px 0 0;
+    color: #667085;
+    font-size: 15px;
+}
+
+
+/* Buttons */
+
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    border-radius: 8px;
+    padding: 11px 18px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #4285f4;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #357ae8;
+}
+
+.btn-secondary {
+    background: white;
+    color: #19324d;
+    border: 1px solid #d8dee8;
+}
+
+
+/* Filter */
+
+.filter-card {
+    background: white;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    padding: 22px;
+    margin-bottom: 25px;
+}
+
+.filter-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+}
+
+.filter-group {
+    flex: 1;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #344054;
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #d0d5dd;
+    border-radius: 7px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.filter-button {
+    padding-bottom: 0;
+}
+
+
+/* Records */
+
+.records-card {
+    background: white;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.records-header {
+    padding: 25px 28px 18px;
+}
+
+.records-header h2 {
+    margin: 0;
+    color: #19324d;
+    font-size: 22px;
+}
+
+.records-header p {
+    margin: 6px 0 0;
+    color: #667085;
+    font-size: 14px;
+}
+
+
+/* Table */
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.email-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+}
+
+.email-table th {
+    background: #f7f9fc;
+    color: #19324d;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    padding: 16px 14px;
+    border-bottom: 1px solid #e4e7ec;
+}
+
+.email-table td {
+    padding: 16px 14px;
+    font-size: 15px;
+    color: #344054;
+    border-bottom: 1px solid #eaecf0;
+    vertical-align: middle;
+}
+
+.email-table tbody tr:hover {
+    background: #fafcff;
+}
+
+
+/* Status */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-sent {
+    color: #087443;
+    background: #dcfae6;
+}
+
+.status-failed {
+    color: #b42318;
+    background: #fee4e2;
+}
+
+.status-pending {
+    color: #b54708;
+    background: #fef0c7;
+}
+
+
+/* View */
+
+.view-link {
+    color: #1d4ed8;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.view-link:hover {
+    color: #163da8;
+}
+
+
+/* Empty */
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state h3 {
+    color: #19324d;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: #667085;
+}
+
+
+/* Mobile */
+
+@media (max-width: 768px) {
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 18px;
+    }
+
+    .header-actions {
+        width: 100%;
+    }
+
+    .header-actions .btn {
+        flex: 1;
+    }
+
+    .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-group {
+        width: 100%;
+    }
+
+    .filter-button .btn {
+        width: 100%;
+    }
+
+}
+
+</style>
+
+{% endblock %}

@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}
+DesFlyer | Dashboard
+{% endblock %}
+
+
+{% block content %}
+
+<div class="dashboard-container">
+
+    <!-- HEADER -->
+
+    <div class="dashboard-header">
+
+        <div>
+
+            <h1>DesFlyer Email Automation</h1>
+
+            <p>
+                Monitor your email activity
+            </p>
+
+        </div>
+    </div>
+
+
+    <!-- STATISTICS -->
+
+    <div class="stats-grid">
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Total Emails
+            </div>
+
+            <div class="stat-number">
+                {{ total_emails }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Sent
+            </div>
+
+            <div class="stat-number sent">
+                {{ sent_emails }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Failed
+            </div>
+
+            <div class="stat-number failed">
+                {{ failed_emails }}
+            </div>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <div class="stat-label">
+                Pending
+            </div>
+
+            <div class="stat-number pending">
+                {{ pending_emails }}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- RECENT EMAILS -->
+
+    <div class="email-history-card">
+
+        <div class="section-header">
+
+            <div>
+
+                <h2>Recent Emails</h2>
+
+                <p>
+                    Latest email activity
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if recent_emails %}
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>S.No</th>
+
+                        <th>Recipient</th>
+
+                        <th>Subject</th>
+
+                        <th>CC</th>
+
+                        <th>Status</th>
+
+                        <th>Date</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for email in recent_emails %}
+
+                    <tr>
+
+                        <td>
+                            {{ loop.index }}
+                        </td>
+
+
+                        <td>
+                            {{ email.recipient }}
+                        </td>
+
+
+                        <td>
+                            {{ email.subject }}
+                        </td>
+
+
+                        <td>
+                            {{ email.cc or "-" }}
+                        </td>
+
+
+                        <td>
+
+                            {% if email.status == "SENT" %}
+
+                                <span class="status sent-status">
+                                    SENT
+                                </span>
+
+                            {% elif email.status == "FAILED" %}
+
+                                <span class="status failed-status">
+                                    FAILED
+                                </span>
+
+                            {% else %}
+
+                                <span class="status pending-status">
+                                    PENDING
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td>
+
+                            {% if email.created_at %}
+
+                                {{ email.created_at.strftime(
+                                    "%d-%m-%Y %H:%M"
+                                ) }}
+
+                            {% else %}
+
+                                -
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        {% else %}
+
+            <div class="empty-state">
+
+                <p>No emails have been sent yet.</p>
+
+                <a
+                    href="{{ url_for('email.send') }}"
+                    class="primary-button"
+                >
+                    Send Your First Email
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

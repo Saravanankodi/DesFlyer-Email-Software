@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block title %}DesFlyer Email Automation{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    {% if current_user.is_authenticated %}
+    <header class="app-navbar">
+        <a class="navbar-brand" href="{{ url_for('dashboard.dashboard') }}" aria-label="DesFlyer home">
+            <img src="{{ url_for('static', filename='images/desflyer-wordmark.png') }}" alt="DesFlyer">
+            <span>EAS</span>
+        </a>
+
+        <nav class="navbar-links" aria-label="Main navigation">
+            <a href="{{ url_for('dashboard.dashboard') }}" {% if request.endpoint == 'dashboard.dashboard' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▦</span> Dashboard
+            </a>
+            <a href="{{ url_for('email.send') }}" {% if request.endpoint == 'email.send' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">✉</span> Send Email
+            </a>
+            <a href="{{ url_for('email.history') }}" {% if request.endpoint in ['email.history', 'email.email_detail'] %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">☷</span> Email History
+            </a>
+            <a href="{{ url_for('dashboard.report') }}" {% if request.endpoint == 'dashboard.report' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▤</span> Report
+            </a>
+            <a href="{{ url_for('dashboard.analytics') }}" {% if request.endpoint == 'dashboard.analytics' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▥</span> Analytics
+            </a>
+        </nav>
+
+        <div class="navbar-account">
+            <span class="navbar-user">{{ current_user.name }}</span>
+            <div class="notification-wrap">
+                <button class="navbar-notification" type="button" aria-label="Notifications" title="Notifications" aria-expanded="false" aria-controls="notification-panel">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+                </button>
+                <div class="notification-panel" id="notification-panel" hidden>
+                    <strong>Notifications</strong>
+                    <p>Review recent delivery activity in your email history.</p>
+                    <a href="{{ url_for('email.history') }}">Open email history <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+            <a class="navbar-logout" href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
+    </header>
+    {% endif %}
+
+    {% block content %}
+    {% endblock %}
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+</html>
