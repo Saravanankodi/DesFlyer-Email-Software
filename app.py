@@ -1,5 +1,4 @@
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, timedelta
 
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
@@ -21,10 +20,9 @@ def format_ist(value):
     if not value:
         return "-"
 
-    ist_time = value.replace(
-        tzinfo=ZoneInfo("UTC")
-    ).astimezone(
-        ZoneInfo("Asia/Kolkata")
+    # IST is a fixed UTC+05:30 offset and does not observe daylight saving time.
+    ist_time = value.replace(tzinfo=timezone.utc).astimezone(
+        timezone(timedelta(hours=5, minutes=30))
     )
 
     return ist_time.strftime("%d-%m-%Y %H:%M")
@@ -69,6 +67,7 @@ def create_app():
     from routes.auth import auth_bp
     from routes.dashboard import dashboard_bp
     from routes.email import email_bp
+    from models.campaign import Campaign, CampaignRecipient, Suppression
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
@@ -86,6 +85,8 @@ def create_app():
     # --------------------------------
     with app.app_context():
         db.create_all()
+        # Load model classes before create_all without changing existing email_logs.
+        _ = (Campaign, CampaignRecipient, Suppression)
 
     return app
 

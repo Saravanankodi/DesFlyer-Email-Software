@@ -35,6 +35,9 @@
             <a href="{{ url_for('email.history') }}" {% if request.endpoint in ['email.history', 'email.email_detail'] %}aria-current="page"{% endif %}>
                 <span aria-hidden="true">☷</span> Email History
             </a>
+            <a href="{{ url_for('email.campaigns') }}" {% if request.endpoint in ['email.campaigns', 'email.campaign_detail'] %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▤</span> Campaigns
+            </a>
             <a href="{{ url_for('dashboard.report') }}" {% if request.endpoint == 'dashboard.report' %}aria-current="page"{% endif %}>
                 <span aria-hidden="true">▤</span> Report
             </a>

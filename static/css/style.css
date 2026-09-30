@@ -538,6 +538,26 @@ textarea {
     box-shadow: 0 0 0 3px rgba(4, 150, 255, 0.12);
 }
 
+.recipient-modes { display: flex; flex-wrap: wrap; gap: 18px; padding: 13px 15px; border: 1px solid #e5e7eb; border-radius: 8px; }
+.recipient-modes label, .consent-check { display: flex; align-items: flex-start; gap: 9px; color: #344054; font-size: 14px; }
+.recipient-modes input, .consent-check input { width: auto; margin-top: 3px; }
+.email-card [hidden] { display: none !important; }
+.recipient-preview { margin: 20px 0; padding: 18px; border: 1px solid #dce7f5; border-radius: 10px; background: #f8fbff; color: #344054; }
+.recipient-preview h2 { color: #19324d; font-size: 18px; margin-bottom: 8px; }
+.recipient-preview h3 { color: #b42318; font-size: 14px; }
+.recipient-preview ul { max-height: 180px; overflow: auto; margin: 8px 0; padding-left: 22px; }
+.consent-check { margin: 15px 0; }
+.deliverability-note { margin-top: 20px; color: #667085; font-size: 13px; line-height: 1.6; }
+.campaign-progress { padding: 24px; }
+.campaign-progress progress { width: min(500px, 80%); height: 14px; vertical-align: middle; accent-color: #15966c; }
+.campaign-progress > span { margin-left: 10px; font-weight: 700; color: #19324d; }
+.campaign-control { margin: 12px 0; }
+.suppression-card { margin-top: 20px; padding: 22px; }
+.suppression-card h2 { color: #19324d; font-size: 18px; }
+.suppression-card p { margin: 8px 0 14px; color: #667085; font-size: 13px; }
+.suppression-card form { display: flex; flex-wrap: wrap; gap: 10px; }
+.suppression-card input, .suppression-card select { min-height: 42px; padding: 8px 12px; border: 1px solid #d0d5dd; border-radius: 7px; }
+
 
 /* =========================
    PASSWORD

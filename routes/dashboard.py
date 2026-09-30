@@ -5,6 +5,7 @@ from flask_login import login_required
 
 from models import db
 from models.email import EmailLog
+from models.campaign import Campaign, CampaignRecipient
 
 
 dashboard_bp = Blueprint(
@@ -60,6 +61,12 @@ def analytics():
     failed_emails = EmailLog.query.filter_by(status="FAILED").count()
     pending_emails = EmailLog.query.filter_by(status="PENDING").count()
     delivery_rate = round((sent_emails / total_emails) * 100) if total_emails else 0
+    total_campaigns = Campaign.query.count()
+    campaign_recipients = CampaignRecipient.query.count()
+    campaign_sent = CampaignRecipient.query.filter_by(status="SENT").count()
+    campaign_failed = CampaignRecipient.query.filter_by(status="FAILED").count()
+    campaign_pending = CampaignRecipient.query.filter(CampaignRecipient.status.in_(["PENDING", "SENDING"])).count()
+    campaign_success_rate = round(campaign_sent / campaign_recipients * 100, 1) if campaign_recipients else 0
 
     today = datetime.now().date()
     daily_activity = []
@@ -82,4 +89,10 @@ def analytics():
         pending_emails=pending_emails,
         delivery_rate=delivery_rate,
         daily_activity=daily_activity,
+        total_campaigns=total_campaigns,
+        campaign_recipients=campaign_recipients,
+        campaign_sent=campaign_sent,
+        campaign_failed=campaign_failed,
+        campaign_pending=campaign_pending,
+        campaign_success_rate=campaign_success_rate,
     )

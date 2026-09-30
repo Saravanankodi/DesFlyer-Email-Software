@@ -1,134 +1,38 @@
 {% extends "base.html" %}
-
-{% block title %}
-DesFlyer | Send Email
-{% endblock %}
-
-
+{% block title %}DesFlyer | Send Email{% endblock %}
 {% block content %}
-
-<div class="email-page">
-
-    <div class="email-card">
-
-        <div class="email-header">
-
-            <h1>Send Email</h1>
-
-            <p>
-                Send an email through DesFlyer
-            </p>
-
-        </div>
-
-
-        {% with messages = get_flashed_messages(
-            with_categories=true
-        ) %}
-
-            {% if messages %}
-
-                {% for category, message in messages %}
-
-                    <div class="flash-message {{ category }}">
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            {% endif %}
-
-        {% endwith %}
-
-
-        <form
-            method="POST"
-            action="{{ url_for('email.send') }}"
-        >
-
-
-            <div class="form-group">
-
-                <label for="recipient">
-                    Recipient Email
-                </label>
-
-                <input
-                    type="email"
-                    id="recipient"
-                    name="recipient"
-                    placeholder="recipient@example.com"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="cc">
-                    CC
-                </label>
-
-                <input
-                    type="text"
-                    id="cc"
-                    name="cc"
-                    placeholder="person1@example.com, person2@example.com"
-                >
-
-                <small>
-                    Separate multiple CC addresses with commas.
-                </small>
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="subject">
-                    Subject
-                </label>
-
-                <input
-                    type="text"
-                    id="subject"
-                    name="subject"
-                    placeholder="Enter email subject"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group">
-
-                <label for="body">
-                    Message
-                </label>
-
-                <textarea
-                    id="body"
-                    name="body"
-                    rows="12"
-                    placeholder="Write your email..."
-                    required
-                ></textarea>
-
-            </div>
-
-
-            <button
-                type="submit"
-                class="login-button"
-            >
-                Send Email
-            </button>
-
-        </form>
-
-    </div>
-
-</div>
-
+<div class="email-page"><div class="email-card">
+  <div class="email-header"><h1>Send Email</h1><p>Send individually tracked messages or queue a recipient campaign.</p></div>
+  {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash-message {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+  <form method="POST" action="{{ url_for('email.send') }}" enctype="multipart/form-data" id="send-form">
+    <div class="form-group"><label>Recipient Source</label><div class="recipient-modes">
+      <label><input type="radio" name="recipient_source" value="manual" {% if recipient_source != 'upload' %}checked{% endif %}> Single / multiple emails</label>
+      <label><input type="radio" name="recipient_source" value="upload" {% if recipient_source == 'upload' %}checked{% endif %}> Upload CSV / Excel</label>
+    </div></div>
+    <div class="form-group" id="manual-source"><label for="recipients">Email Addresses</label><textarea id="recipients" name="recipients" rows="3" placeholder="one@example.com, two@example.com">{{ recipients_input or '' }}</textarea><small>Separate addresses with commas. Duplicates are removed case-insensitively.</small></div>
+    <div class="form-group" id="file-source"><label for="recipient_file">Upload File</label><input type="file" id="recipient_file" name="recipient_file" accept=".csv,.xlsx"><small>CSV or .xlsx; include an email column header. Maximum {{ (config.MAX_CONTENT_LENGTH / 1024 / 1024)|round(0)|int }} MB. Legacy .xls is unsupported.</small></div>
+    <div class="form-group"><label for="campaign_name">Campaign Name</label><input type="text" id="campaign_name" name="campaign_name" maxlength="255" value="{{ campaign_name or '' }}" placeholder="Campaign name (optional)"></div>
+    <div class="form-group"><label for="cc">CC (single email only)</label><input type="text" id="cc" name="cc" placeholder="person@example.com"><small>CC remains available for single email sends and is not used for campaigns.</small></div>
+    <div class="form-group"><label for="subject">Subject</label><input type="text" id="subject" name="subject" maxlength="255" required value="{{ subject or '' }}" placeholder="Enter email subject"></div>
+    <div class="form-group"><label for="body">Message</label><textarea id="body" name="body" rows="10" required placeholder="Write your email...">{{ body or '' }}</textarea></div>
+    {% if preview is not none %}
+    <section class="recipient-preview" aria-live="polite"><h2>Recipient Preview</h2>
+      <p>Detected: {{ preview.valid|length + preview.invalid|length + preview.duplicates|length }} &nbsp; Valid: {{ preview.valid|length }} &nbsp; Duplicates: {{ preview.duplicates|length }} &nbsp; Invalid: {{ preview.invalid|length }}</p>
+      {% if preview.invalid %}<h3>Invalid addresses</h3><ul>{% for address in preview.invalid %}<li>{{ address }}</li>{% endfor %}</ul>{% endif %}
+      {% if preview.valid %}<p><strong>Ready to send: {{ preview.valid|length }}</strong> (suppressed addresses will be excluded at queue time)</p>{% endif %}
+    </section>
+    {% if preview.valid %}<input type="hidden" name="validated_recipients" value='{{ preview.valid|tojson }}'>
+      {% if recipient_source != 'upload' and preview.valid|length == 1 %}<button type="submit" formnovalidate class="login-button" name="action" value="legacy_single">Send Single Email (CC supported)</button>{% endif %}
+      {% if preview.invalid %}<label class="consent-check"><input type="checkbox" name="exclude_invalid" value="yes" required> Exclude the invalid addresses listed above and continue with valid recipients.</label>{% endif %}
+      <label class="consent-check"><input type="checkbox" name="authorized_list" value="yes" required> I confirm these recipients opted in to receive this email and are not a purchased or scraped list.</label>
+      <button type="submit" class="login-button" name="action" value="queue">Queue Campaign</button>
+    {% endif %}
+    {% endif %}
+    <button type="submit" class="login-button" name="action" value="preview">Validate Recipients</button>
+  </form>
+  <p class="deliverability-note">Messages are sent one recipient at a time at a controlled rate. Delivery and inbox placement depend on your SMTP provider and domain authentication; inbox placement cannot be guaranteed.</p>
+</div></div>
+<script>
+(() => { const modes = document.querySelectorAll('[name="recipient_source"]'); const manual = document.getElementById('manual-source'); const file = document.getElementById('file-source'); const refresh = () => { const upload = document.querySelector('[name="recipient_source"]:checked').value === 'upload'; manual.hidden = upload; file.hidden = !upload; document.getElementById('recipients').required = !upload; document.getElementById('recipient_file').required = upload && !document.querySelector('[name="validated_recipients"]'); }; modes.forEach(mode => mode.addEventListener('change', refresh)); refresh(); })();
+</script>
 {% endblock %}

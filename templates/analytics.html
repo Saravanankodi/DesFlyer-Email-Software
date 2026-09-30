@@ -20,6 +20,13 @@
         <article class="analytics-stat-card"><span class="analytics-stat-icon amber" aria-hidden="true">◷</span><p>Pending</p><strong>{{ pending_emails }}</strong><small>Awaiting completion</small></article>
     </section>
 
+    <section class="analytics-stats" aria-label="Campaign delivery summary">
+        <article class="analytics-stat-card"><span class="analytics-stat-icon blue">▤</span><p>Total campaigns</p><strong>{{ total_campaigns }}</strong><small>Bulk campaigns queued</small></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon blue">◎</span><p>Total recipients</p><strong>{{ campaign_recipients }}</strong><small>Individual delivery jobs</small></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon green">✓</span><p>Campaign sent</p><strong>{{ campaign_sent }}</strong><small>{{ campaign_success_rate }}% sent successfully</small></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon red">!</span><p>Failed / pending</p><strong>{{ campaign_failed }} / {{ campaign_pending }}</strong><small>Failures and jobs still queued</small></article>
+    </section>
+
     <section class="analytics-panel">
         <div class="analytics-panel-heading">
             <div><h2>Email activity</h2><p>Emails logged over the last seven days</p></div>

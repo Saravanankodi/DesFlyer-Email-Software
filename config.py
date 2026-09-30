@@ -76,3 +76,10 @@ class Config:
     MAIL_DEFAULT_SENDER = os.getenv(
         "MAIL_DEFAULT_SENDER"
     )
+
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_UPLOAD_BYTES", 5 * 1024 * 1024))
+    CAMPAIGN_BATCH_SIZE = int(os.getenv("CAMPAIGN_BATCH_SIZE", 10))
+    CAMPAIGN_DELAY_SECONDS = float(os.getenv("CAMPAIGN_DELAY_SECONDS", 2))
+    CAMPAIGN_MAX_ATTEMPTS = int(os.getenv("CAMPAIGN_MAX_ATTEMPTS", 2))
+    CAMPAIGN_POLL_SECONDS = float(os.getenv("CAMPAIGN_POLL_SECONDS", 2))
+    CAMPAIGN_UNSUBSCRIBE_BASE_URL = os.getenv("CAMPAIGN_UNSUBSCRIBE_BASE_URL", "http://localhost:5000")
