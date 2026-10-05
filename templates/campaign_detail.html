@@ -1,8 +1,67 @@
 {% extends "base.html" %}{% block title %}Campaign Progress{% endblock %}{% block content %}
 <div class="page-container"><div class="page-header"><div><h1>{{ campaign.name }}</h1><p>{{ campaign.subject }} · Status: <strong id="campaign-status">{{ campaign.status }}</strong></p></div><a class="btn btn-secondary" href="{{ url_for('email.campaigns') }}">Campaign History</a></div>
-<div class="records-card campaign-progress" data-progress-url="{{ url_for('email.campaign_progress', campaign_id=campaign.id) }}"><p>Total: <strong id="total">{{ campaign.total_recipients }}</strong> &nbsp; Sent: <strong id="sent">{{ counts.SENT }}</strong> &nbsp; Failed: <strong id="failed">{{ counts.FAILED }}</strong> &nbsp; Pending: <strong id="pending">{{ counts.PENDING + counts.SENDING }}</strong></p><progress id="progressbar" max="100" value="{{ progress }}"></progress><span id="progress-value">{{ progress }}%</span><p>Suppressed and future unsubscribes are excluded from sending.</p></div>
+<div class="records-card campaign-progress" data-progress-url="{{ url_for('email.campaign_progress', campaign_id=campaign.id) }}"><p>Total: <strong id="total">{{ campaign.total_recipients }}</strong> &nbsp; Sent: <strong id="sent">{{ counts.SENT }}</strong> &nbsp; Failed: <strong id="failed">{{ counts.FAILED }}</strong> &nbsp; Pending: <strong id="pending">{{ counts.PENDING + counts.SENDING }}</strong></p><progress id="progressbar" max="100" value="{{ progress }}"></progress><span id="progress-value">{{ progress }}%</span><p id="campaign-eta">{% if campaign.status == 'COMPLETED' %}Campaign completed.{% elif campaign.status == 'PAUSED' %}Campaign paused. Estimate updates when resumed.{% elif campaign.status == 'FAILED' %}Campaign stopped before completion.{% else %}Estimated time remaining: about {{ (estimated_seconds / 60)|round(0, 'ceil')|int }} minutes at the configured sending rate.{% endif %}</p><p>Estimate uses the configured delay and excludes retries and provider response time.</p><p>Suppressed and future unsubscribes are excluded from sending.</p></div>
 {% if campaign.status in ['QUEUED','RUNNING','PAUSED'] %}<form method="POST" action="{{ url_for('email.campaign_control', campaign_id=campaign.id) }}" class="campaign-control"><button class="btn btn-secondary" name="action" value="{% if campaign.status == 'PAUSED' %}resume{% else %}pause{% endif %}">{% if campaign.status == 'PAUSED' %}Resume Campaign{% else %}Pause Campaign{% endif %}</button></form>{% endif %}
-<div class="records-card" style="margin-top:20px"><div class="records-header"><h2>Recipient Status</h2></div><div class="table-wrapper"><table class="email-table"><thead><tr><th>Recipient</th><th>Status</th><th>Attempts</th><th>Error</th><th>Sent At</th></tr></thead><tbody>{% for recipient in recipients %}<tr><td>{{ recipient.email }}</td><td>{{ recipient.status }}</td><td>{{ recipient.attempts }}</td><td>{{ recipient.error_message or '-' }}</td><td>{{ recipient.sent_at|ist }}</td></tr>{% endfor %}</tbody></table></div></div></div>
+<div class="records-card" style="margin-top:20px"><div class="records-header"><h2>Recipient Status</h2></div><div class="table-wrapper"><table class="email-table"><thead><tr><th>Recipient</th><th>Status</th><th>Attempts</th><th>Error</th><th>Sent At</th></tr></thead><tbody id="recipient-rows">{% for recipient in recipients %}<tr><td>{{ recipient.email }}</td><td>{{ recipient.status }}</td><td>{{ recipient.attempts }}</td><td>{{ recipient.error_message or '-' }}</td><td>{{ recipient.sent_at|ist }}</td></tr>{% endfor %}</tbody></table></div></div></div>
 <script>
-(() => { const panel = document.querySelector('.campaign-progress'); const url = panel.dataset.progressUrl; const poll = async () => { try { const response = await fetch(url, {headers: {'Accept':'application/json'}}); if (!response.ok) return; const data = await response.json(); document.getElementById('campaign-status').textContent = data.status; document.getElementById('total').textContent = data.total; document.getElementById('sent').textContent = data.sent; document.getElementById('failed').textContent = data.failed; document.getElementById('pending').textContent = data.pending + data.sending; const percent = data.total ? Math.round(data.sent / data.total * 1000) / 10 : 0; document.getElementById('progressbar').value = percent; document.getElementById('progress-value').textContent = percent + '%'; if (['COMPLETED','FAILED'].includes(data.status)) clearInterval(timer); } catch (_) {} }; const timer = setInterval(poll, 3000); })();
+(() => {
+  const panel = document.querySelector('.campaign-progress');
+  const url = panel.dataset.progressUrl;
+  const formatIndiaTime = (value) => {
+    if (!value) return '-';
+    const parts = new Intl.DateTimeFormat('en-IN', {
+      timeZone: 'Asia/Kolkata', day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true,
+    }).formatToParts(new Date(value));
+    const date = Object.fromEntries(parts.map(({type, value: part}) => [type, part]));
+    return `${date.day}-${date.month}-${date.year} ${date.hour}:${date.minute} ${date.dayPeriod.toUpperCase()}`;
+  };
+  const renderRecipients = (recipients) => {
+    const tbody = document.getElementById('recipient-rows');
+    tbody.replaceChildren(...recipients.map((recipient) => {
+      const row = document.createElement('tr');
+      [recipient.email, recipient.status, recipient.attempts, recipient.error || '-', formatIndiaTime(recipient.sent_at)].forEach((value) => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      return row;
+    }));
+  };
+  const poll = async () => {
+    try {
+      const response = await fetch(url, {headers: {'Accept': 'application/json'}});
+      if (!response.ok) return;
+      const data = await response.json();
+      document.getElementById('campaign-status').textContent = data.status;
+      document.getElementById('total').textContent = data.total;
+      document.getElementById('sent').textContent = data.sent;
+      document.getElementById('failed').textContent = data.failed;
+      document.getElementById('pending').textContent = data.pending + data.sending;
+      const eta = document.getElementById('campaign-eta');
+      if (data.status === 'COMPLETED') {
+        eta.textContent = 'Campaign completed.';
+      } else if (data.status === 'PAUSED') {
+        eta.textContent = 'Campaign paused. Estimate updates when resumed.';
+      } else if (data.status === 'FAILED') {
+        eta.textContent = 'Campaign stopped before completion.';
+      } else {
+        const minutes = Math.ceil(data.estimated_seconds / 60);
+        eta.textContent = minutes
+          ? `Estimated time remaining: about ${minutes} minutes at the configured sending rate.`
+          : 'Estimated sending delay is less than one minute.';
+      }
+      const percent = data.total ? Math.round(data.sent / data.total * 1000) / 10 : 0;
+      document.getElementById('progressbar').value = percent;
+      document.getElementById('progress-value').textContent = percent + '%';
+      renderRecipients(data.recipients);
+      if (['COMPLETED', 'FAILED'].includes(data.status)) {
+        document.querySelector('.campaign-control')?.remove();
+        clearInterval(timer);
+      }
+    } catch (_) {}
+  };
+  const timer = setInterval(poll, 3000);
+  poll();
+})();
 </script>{% endblock %}

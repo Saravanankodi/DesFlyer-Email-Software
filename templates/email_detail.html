@@ -120,7 +120,7 @@
             <div class="detail-value">
 
                 {% if email.created_at %}
-                    {{ email.created_at.strftime('%d-%m-%Y %H:%M:%S') }}
+                    {{ email.created_at|india_local }}
                 {% else %}
                     -
                 {% endif %}
@@ -141,7 +141,11 @@
             </div>
 
             <div class="detail-value">
-                {{ email.sent_at.strftime('%d-%m-%Y %H:%M:%S') }}
+                {% if is_campaign_email %}
+                    {{ email.sent_at|ist }}
+                {% else %}
+                    {{ email.sent_at|india_local }}
+                {% endif %}
             </div>
 
         </div>
@@ -223,7 +227,7 @@
 .detail-header p {
     margin: 6px 0 0;
     color: #667085;
-    font-size: 15px;
+    font-size: 17px;
 }
 
 
@@ -263,7 +267,7 @@
 .detail-label {
     background: #f7f9fc;
     padding: 20px;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
     color: #19324d;
 }
@@ -271,7 +275,7 @@
 
 .detail-value {
     padding: 20px;
-    font-size: 15px;
+    font-size: 17px;
     color: #344054;
     word-break: break-word;
 }
@@ -285,7 +289,7 @@
     justify-content: center;
     padding: 5px 11px;
     border-radius: 20px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -315,7 +319,7 @@
 
 .error-title {
     color: #b42318;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 700;
     margin-bottom: 10px;
 }
@@ -325,7 +329,7 @@
     background: #fee4e2;
     border-radius: 8px;
     padding: 14px;
-    font-size: 14px;
+    font-size: 16px;
     word-break: break-word;
 }
 
@@ -347,7 +351,7 @@
     padding: 11px 18px;
     border-radius: 8px;
     text-decoration: none;
-    font-size: 15px;
+    font-size: 17px;
     font-weight: 600;
 }
 

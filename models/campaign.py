@@ -10,6 +10,7 @@ class Campaign(db.Model):
     name = db.Column(db.String(255), nullable=False)
     subject = db.Column(db.String(255), nullable=False)
     body = db.Column(db.Text, nullable=False)
+    sender_email = db.Column(db.String(255))
     status = db.Column(db.String(20), nullable=False, default="QUEUED", index=True)
     total_recipients = db.Column(db.Integer, nullable=False, default=0)
     sent_count = db.Column(db.Integer, nullable=False, default=0)
@@ -18,6 +19,18 @@ class Campaign(db.Model):
     started_at = db.Column(db.DateTime)
     completed_at = db.Column(db.DateTime)
     recipients = db.relationship("CampaignRecipient", backref="campaign", lazy=True, cascade="all, delete-orphan")
+    attachments = db.relationship("CampaignAttachment", backref="campaign", lazy=True, cascade="all, delete-orphan")
+
+
+class CampaignAttachment(db.Model):
+    __tablename__ = "campaign_attachments"
+
+    id = db.Column(db.Integer, primary_key=True)
+    campaign_id = db.Column(db.Integer, db.ForeignKey("campaigns.id"), nullable=False, index=True)
+    filename = db.Column(db.String(255), nullable=False)
+    content_type = db.Column(db.String(255), nullable=False, default="application/octet-stream")
+    data = db.Column(db.LargeBinary, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
 
 class CampaignRecipient(db.Model):

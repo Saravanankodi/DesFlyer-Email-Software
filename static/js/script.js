@@ -24,16 +24,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!notificationButton || !notificationPanel) return;
 
-    notificationButton.addEventListener("click", () => {
-        const isOpen = notificationButton.getAttribute("aria-expanded") === "true";
-        notificationButton.setAttribute("aria-expanded", String(!isOpen));
-        notificationPanel.hidden = isOpen;
+    const setNotificationOpen = (isOpen) => {
+        notificationButton.setAttribute("aria-expanded", String(isOpen));
+        notificationPanel.hidden = !isOpen;
+    };
+
+    notificationButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setNotificationOpen(notificationPanel.hidden);
     });
 
     document.addEventListener("click", (event) => {
         if (!event.target.closest(".notification-wrap")) {
-            notificationButton.setAttribute("aria-expanded", "false");
-            notificationPanel.hidden = true;
+            setNotificationOpen(false);
+        }
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !notificationPanel.hidden) {
+            setNotificationOpen(false);
+            notificationButton.focus();
         }
     });
 });

@@ -1,54 +1,99 @@
 {% extends "base.html" %}
 
-{% block title %}DesFlyer | Analytics{% endblock %}
+{% block title %}DesFlyer | Email Analytics{% endblock %}
 
 {% block content %}
 <main class="insights-page">
     <header class="insights-header">
         <div>
-            <p class="eyebrow">PERFORMANCE OVERVIEW</p>
-            <h1>Analytics</h1>
-            <p class="insights-subtitle">A snapshot of your email activity and delivery performance.</p>
+            <p class="eyebrow">DELIVERY TRENDS AND COMPARISONS</p>
+            <h1>Email Analytics</h1>
+            <p class="insights-subtitle">Rates and trends calculated from the project’s final email results.</p>
         </div>
-        <a class="insights-action" href="{{ url_for('email.history') }}">View email history <span aria-hidden="true">→</span></a>
+        <a class="insights-action" href="{{ url_for('dashboard.report') }}">View email report <span aria-hidden="true">→</span></a>
     </header>
 
-    <section class="analytics-stats" aria-label="Email performance summary">
-        <article class="analytics-stat-card"><span class="analytics-stat-icon blue" aria-hidden="true">✉</span><p>Total emails</p><strong>{{ total_emails }}</strong><small>All recorded activity</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon green" aria-hidden="true">✓</span><p>Successfully sent</p><strong>{{ sent_emails }}</strong><small>{{ delivery_rate }}% delivery rate</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon red" aria-hidden="true">!</span><p>Failed</p><strong>{{ failed_emails }}</strong><small>Emails needing attention</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon amber" aria-hidden="true">◷</span><p>Pending</p><strong>{{ pending_emails }}</strong><small>Awaiting completion</small></article>
+    <section class="analytics-stats analytics-kpis" aria-label="Email performance metrics">
+        <article class="analytics-stat-card"><span class="analytics-stat-icon blue" aria-hidden="true">✉</span><p>Final results</p><strong>{{ total_results }}</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon green" aria-hidden="true">✓</span><p>Successful send rate</p><strong>{{ success_rate }}%</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon red" aria-hidden="true">!</span><p>Failure rate</p><strong>{{ failure_rate }}%</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon amber" aria-hidden="true">↘</span><p>Bounce suppressions</p><strong>{{ bounce_suppression_count }}</strong></article>
     </section>
 
-    <section class="analytics-stats" aria-label="Campaign delivery summary">
-        <article class="analytics-stat-card"><span class="analytics-stat-icon blue">▤</span><p>Total campaigns</p><strong>{{ total_campaigns }}</strong><small>Bulk campaigns queued</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon blue">◎</span><p>Total recipients</p><strong>{{ campaign_recipients }}</strong><small>Individual delivery jobs</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon green">✓</span><p>Campaign sent</p><strong>{{ campaign_sent }}</strong><small>{{ campaign_success_rate }}% sent successfully</small></article>
-        <article class="analytics-stat-card"><span class="analytics-stat-icon red">!</span><p>Failed / pending</p><strong>{{ campaign_failed }} / {{ campaign_pending }}</strong><small>Failures and jobs still queued</small></article>
+    <section class="analytics-panel outcome-panel">
+        <div class="analytics-panel-heading"><div><h2>Successful sends vs failures</h2><p>Share of final email results</p></div></div>
+        <div class="outcome-summary">
+            <div class="outcome-label"><span><i class="outcome-dot outcome-sent"></i> Sent successfully</span><strong>{{ sent_count }} <small>{{ success_rate }}%</small></strong></div>
+            <div class="outcome-label"><span><i class="outcome-dot outcome-failed"></i> Failed</span><strong>{{ failed_count }} <small>{{ failure_rate }}%</small></strong></div>
+        </div>
+        <div class="outcome-track" role="img" aria-label="{{ success_rate }} percent successful and {{ failure_rate }} percent failed">
+            <span class="outcome-track-sent" style="width: {{ sent_share }}%"></span><span class="outcome-track-failed" style="width: {{ failed_share }}%"></span>
+        </div>
+        <p class="analytics-data-note">A “sent” result means the sending provider accepted the message. Bounce suppressions are stored as recipient exclusions; provider bounce events are not recorded, so a bounce rate cannot be calculated from this database.</p>
+    </section>
+
+    <div class="analytics-chart-grid">
+        <section class="analytics-panel trend-panel">
+            <div class="analytics-panel-heading"><div><h2>Daily activity</h2><p>Email results created each day over the last 7 days</p></div><span class="chart-period">7 DAYS</span></div>
+            <div class="activity-chart analytics-trend-chart daily-trend-chart" role="img" aria-label="Daily final email result counts for the last 7 days">
+                {% for day in daily_activity %}
+                <div class="activity-column" title="{{ day.date }}: {{ day.count }} results">
+                    <span class="activity-count">{{ day.count }}</span>
+                    <div class="activity-bar-track"><div class="activity-bar" style="height: {{ day.height }}%"></div></div>
+                    <span class="activity-day">{{ day.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="analytics-panel trend-panel">
+            <div class="analytics-panel-heading"><div><h2>Monthly trend</h2><p>Final email results per month this year</p></div><span class="chart-period">YEAR TO DATE</span></div>
+            <div class="activity-chart analytics-trend-chart monthly-trend-chart" style="grid-template-columns: repeat({{ monthly_activity|length }}, minmax(20px, 1fr))" role="img" aria-label="Monthly final email result counts from January through the current month">
+                {% for month in monthly_activity %}
+                <div class="activity-column" title="{{ month.date }}: {{ month.count }} results">
+                    <span class="activity-count">{{ month.count }}</span>
+                    <div class="activity-bar-track"><div class="activity-bar" style="height: {{ month.height }}%"></div></div>
+                    <span class="activity-day">{{ month.label }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+
+    <section class="analytics-panel weekly-insight-panel">
+        <div><h2>Week-over-week activity</h2><p>Compares final email results in the latest seven days with the seven days before that.</p></div>
+        <div class="weekly-insight-values"><span>Previous 7 days <strong>{{ prior_week_count }}</strong></span><span>Latest 7 days <strong>{{ recent_week_count }}</strong></span><span>Change <strong class="{{ 'trend-up' if weekly_change > 0 else 'trend-down' if weekly_change < 0 else '' }}">{{ '+' if weekly_change > 0 else '' }}{{ weekly_change }}</strong></span></div>
     </section>
 
     <section class="analytics-panel">
-        <div class="analytics-panel-heading">
-            <div><h2>Email activity</h2><p>Emails logged over the last seven days</p></div>
-            <span class="chart-period">LAST 7 DAYS</span>
-        </div>
-        <div class="activity-chart" role="img" aria-label="Daily email activity over the last seven days">
-            {% for day in daily_activity %}
-            <div class="activity-column" title="{{ day.date }}: {{ day.count }} emails">
-                <span class="activity-count">{{ day.count }}</span>
-                <div class="activity-bar-track"><div class="activity-bar" style="height: {{ day.height }}%"></div></div>
-                <span class="activity-day">{{ day.label }}</span>
-            </div>
-            {% endfor %}
+        <div class="analytics-panel-heading"><div><h2>Campaign performance</h2><p>Success rates use only sent and failed recipient results</p></div></div>
+        <div class="table-wrapper">
+            <table class="email-table analytics-data-table">
+                <thead><tr><th>Campaign</th><th>Subject</th><th>Results</th><th>Sent</th><th>Failed</th><th>Success rate</th></tr></thead>
+                <tbody>
+                    {% for campaign in campaign_performance %}
+                    <tr><td>{{ campaign.name }}</td><td>{{ campaign.subject }}</td><td>{{ campaign.total }}</td><td>{{ campaign.sent }}</td><td>{{ campaign.failed }}</td><td>{{ campaign.success_rate }}%</td></tr>
+                    {% else %}
+                    <tr><td colspan="6" class="report-empty">No campaign outcome data is available yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </section>
 
-    <section class="analytics-panel status-panel">
-        <div class="analytics-panel-heading"><div><h2>Delivery status</h2><p>Current breakdown of all recorded emails</p></div></div>
-        <div class="status-breakdown">
-            <div class="status-breakdown-row"><span><i class="status-dot sent-dot"></i> Sent</span><strong>{{ sent_emails }}</strong><div class="status-track"><i class="status-fill sent-fill" style="width: {{ (sent_emails / total_emails * 100) if total_emails else 0 }}%"></i></div></div>
-            <div class="status-breakdown-row"><span><i class="status-dot failed-dot"></i> Failed</span><strong>{{ failed_emails }}</strong><div class="status-track"><i class="status-fill failed-fill" style="width: {{ (failed_emails / total_emails * 100) if total_emails else 0 }}%"></i></div></div>
-            <div class="status-breakdown-row"><span><i class="status-dot pending-dot"></i> Pending</span><strong>{{ pending_emails }}</strong><div class="status-track"><i class="status-fill pending-fill" style="width: {{ (pending_emails / total_emails * 100) if total_emails else 0 }}%"></i></div></div>
+    <section class="analytics-panel">
+        <div class="analytics-panel-heading"><div><h2>Recipient domain performance</h2><p>Final email results grouped by the recipient’s email domain</p></div></div>
+        <div class="table-wrapper">
+            <table class="email-table analytics-data-table">
+                <thead><tr><th>Recipient domain</th><th>Results</th><th>Sent</th><th>Failed</th><th>Success rate</th></tr></thead>
+                <tbody>
+                    {% for domain in domain_performance %}
+                    <tr><td>{{ domain.domain }}</td><td>{{ domain.total }}</td><td>{{ domain.sent }}</td><td>{{ domain.failed }}</td><td>{{ domain.success_rate }}%</td></tr>
+                    {% else %}
+                    <tr><td colspan="5" class="report-empty">No recipient domain results are available yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </section>
 </main>

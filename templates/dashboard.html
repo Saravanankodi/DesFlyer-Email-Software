@@ -69,18 +69,6 @@ DesFlyer | Dashboard
         </div>
 
 
-        <div class="stat-card">
-
-            <div class="stat-label">
-                Pending
-            </div>
-
-            <div class="stat-number pending">
-                {{ pending_emails }}
-            </div>
-
-        </div>
-
     </div>
 
 
@@ -181,13 +169,11 @@ DesFlyer | Dashboard
                         </td>
 
 
-                        <td>
+                        <td class="date-cell">
 
                             {% if email.created_at %}
 
-                                {{ email.created_at.strftime(
-                                    "%d-%m-%Y %H:%M"
-                                ) }}
+                                <span>{{ email.created_at.strftime("%d-%m-%Y") }}</span><span>{{ email.created_at.strftime("%I:%M %p") }}</span>
 
                             {% else %}
 

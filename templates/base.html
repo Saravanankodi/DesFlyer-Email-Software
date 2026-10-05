@@ -19,52 +19,78 @@
 <body>
 
     {% if current_user.is_authenticated %}
+    <div class="app-shell">
     <header class="app-navbar">
+        <div class="navbar-brand-row">
         <a class="navbar-brand" href="{{ url_for('dashboard.dashboard') }}" aria-label="DesFlyer home">
             <img src="{{ url_for('static', filename='images/desflyer-wordmark.png') }}" alt="DesFlyer">
             <span>EAS</span>
         </a>
-
-        <nav class="navbar-links" aria-label="Main navigation">
-            <a href="{{ url_for('dashboard.dashboard') }}" {% if request.endpoint == 'dashboard.dashboard' %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">▦</span> Dashboard
-            </a>
-            <a href="{{ url_for('email.send') }}" {% if request.endpoint == 'email.send' %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">✉</span> Send Email
-            </a>
-            <a href="{{ url_for('email.history') }}" {% if request.endpoint in ['email.history', 'email.email_detail'] %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">☷</span> Email History
-            </a>
-            <a href="{{ url_for('email.campaigns') }}" {% if request.endpoint in ['email.campaigns', 'email.campaign_detail'] %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">▤</span> Campaigns
-            </a>
-            <a href="{{ url_for('dashboard.report') }}" {% if request.endpoint == 'dashboard.report' %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">▤</span> Report
-            </a>
-            <a href="{{ url_for('dashboard.analytics') }}" {% if request.endpoint == 'dashboard.analytics' %}aria-current="page"{% endif %}>
-                <span aria-hidden="true">▥</span> Analytics
-            </a>
-        </nav>
-
-        <div class="navbar-account">
-            <span class="navbar-user">{{ current_user.name }}</span>
             <div class="notification-wrap">
                 <button class="navbar-notification" type="button" aria-label="Notifications" title="Notifications" aria-expanded="false" aria-controls="notification-panel">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
                 </button>
                 <div class="notification-panel" id="notification-panel" hidden>
                     <strong>Notifications</strong>
-                    <p>Review recent delivery activity in your email history.</p>
-                    <a href="{{ url_for('email.history') }}">Open email history <span aria-hidden="true">→</span></a>
+                    {% if notification_items %}
+                    <ul class="notification-list">
+                        {% for item in notification_items %}
+                        <li>
+                            <a href="{{ url_for('email.campaign_detail', campaign_id=item.id) }}">
+                                <span class="status {% if item.status == 'COMPLETED' %}sent-status{% elif item.status == 'FAILED' %}failed-status{% else %}pending-status{% endif %}">{{ item.status }}</span>
+                                <strong>{{ item.name }}</strong>
+                                <small>{{ item.sent_count }} sent · {{ item.failed_count }} failed · {{ item.total_recipients }} total · {{ item.created_at|ist }}</small>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p>No email activity yet.</p>
+                    {% endif %}
+                    <a href="{{ url_for('email.history') }}">View email history <span aria-hidden="true">→</span></a>
                 </div>
             </div>
-            <a class="navbar-logout" href="{{ url_for('auth.logout') }}">Logout</a>
+        </div>
+
+        <nav class="navbar-links" aria-label="Main navigation">
+            <a href="{{ url_for('dashboard.dashboard') }}" title="Dashboard" aria-label="Dashboard" {% if request.endpoint == 'dashboard.dashboard' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▦</span> Dashboard
+            </a>
+            <a href="{{ url_for('email.send') }}" title="Send Email" aria-label="Send Email" {% if request.endpoint == 'email.send' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">✉</span> Send Email
+            </a>
+            <a href="{{ url_for('email.history') }}" title="Email History" aria-label="Email History" {% if request.endpoint in ['email.history', 'email.email_detail'] %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">☷</span> Email History
+            </a>
+            <a href="{{ url_for('email.campaigns') }}" title="Campaigns" aria-label="Campaigns" {% if request.endpoint in ['email.campaigns', 'email.campaign_detail'] %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▤</span> Campaigns
+            </a>
+            <a href="{{ url_for('dashboard.report') }}" title="Report" aria-label="Report" {% if request.endpoint == 'dashboard.report' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▤</span> Report
+            </a>
+            <a href="{{ url_for('dashboard.analytics') }}" title="Analytics" aria-label="Analytics" {% if request.endpoint == 'dashboard.analytics' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">▥</span> Analytics
+            </a>
+            <a href="{{ url_for('email.settings') }}" title="Settings" aria-label="Settings" {% if request.endpoint == 'email.settings' %}aria-current="page"{% endif %}>
+                <span aria-hidden="true">⚙</span> Settings
+            </a>
+        </nav>
+
+        <div class="navbar-account">
+            <span class="navbar-user">{{ current_user.name }}</span>
+            <a class="navbar-logout" href="{{ url_for('auth.logout') }}" title="Logout" aria-label="Logout"><span class="navbar-logout-label">Logout</span><span class="navbar-logout-icon" aria-hidden="true">⇥</span></a>
         </div>
     </header>
+    <main class="app-content">
     {% endif %}
 
     {% block content %}
     {% endblock %}
+
+    {% if current_user.is_authenticated %}
+    </main>
+    </div>
+    {% endif %}
 
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 

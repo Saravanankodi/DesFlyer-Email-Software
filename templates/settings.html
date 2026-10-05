@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}DesFlyer | Settings{% endblock %}
+{% block content %}
+<main class="email-page"><section class="email-card">
+  <div class="email-header"><h1>Settings</h1><p>Manage sender addresses and the SMTP account used for each one.</p></div>
+  {% with messages = get_flashed_messages(with_categories=true) %}{% for category, message in messages %}<div class="flash-message {{ category }}">{{ message }}</div>{% endfor %}{% endwith %}
+  <form method="post" class="sender-add-form settings-sender-form" id="sender-form">
+    {% if edit_sender %}<input type="hidden" name="sender_id" value="{{ edit_sender.id }}"><h2>Edit sender email</h2>{% else %}<h2>Add sender email</h2>{% endif %}
+    <div class="form-group"><label for="sender-email">Sender email address</label><input type="email" id="sender-email" name="email" maxlength="255" placeholder="you@example.com" value="{{ edit_sender.email if edit_sender else '' }}" required></div>
+    <div class="form-group"><label for="sender-signoff">Sign-off for this sender</label><textarea id="sender-signoff" name="signoff" rows="4" required placeholder="Regards,&#10;Your Name&#10;Company / contact details">{{ edit_sender.signoff if edit_sender else '' }}</textarea><small>This sign-off is automatically added to emails sent from this address.</small></div>
+    <h3>SMTP account</h3><p>Leave SMTP server blank to use the account configured in the environment.</p>
+    <div class="form-group"><label for="smtp-server">SMTP server</label><input type="text" id="smtp-server" name="smtp_server" placeholder="smtp.example.com" autocomplete="off" value="{{ edit_sender.smtp_server if edit_sender else '' }}"></div>
+    <div class="form-group"><label for="smtp-port">SMTP port</label><input type="number" id="smtp-port" name="smtp_port" min="1" max="65535" value="{{ edit_sender.smtp_port if edit_sender and edit_sender.smtp_port else 587 }}"></div>
+    <div class="form-group"><label for="smtp-username">SMTP username</label><input type="text" id="smtp-username" name="smtp_username" autocomplete="username" value="{{ edit_sender.smtp_username if edit_sender else '' }}"></div>
+    <div class="form-group"><label for="smtp-password">SMTP password / app password</label><input type="password" id="smtp-password" name="smtp_password" autocomplete="new-password" placeholder="{{ 'Leave blank to keep the saved password' if edit_sender and edit_sender.smtp_password_encrypted else 'Enter SMTP password if required' }}"></div>
+    <div class="form-group smtp-tls-option"><label><input type="checkbox" name="smtp_use_tls" {% if not edit_sender or edit_sender.smtp_use_tls %}checked{% endif %}> Use STARTTLS</label></div>
+    <div class="settings-form-actions">
+      <button class="login-button" type="submit" name="action" value="{{ 'update' if edit_sender else 'add' }}">{{ 'Save changes' if edit_sender else 'Add email' }}</button>
+      {% if edit_sender %}<a class="settings-cancel-link" href="{{ url_for('email.settings') }}">Cancel</a>{% endif %}
+    </div>
+  </form>
+  <p class="deliverability-note">Use the credentials and server details supplied by your email provider. SMTP passwords are encrypted in the database using the app SECRET_KEY. Keep SECRET_KEY private and stable; changing it makes saved SMTP passwords unreadable.</p>
+  <div class="records-card saved-senders-card" id="saved-senders"><h2>Saved sender emails</h2>{% if senders %}<div class="sender-table-wrapper"><table class="sender-table"><thead><tr><th>Email address</th><th>SMTP</th><th>Sign-off</th><th class="sender-actions-heading">Actions</th></tr></thead><tbody>{% for sender in senders %}<tr>
+    <td><strong>{{ sender.email }}</strong>{% if sender.email == config.MAIL_DEFAULT_SENDER %}<span class="sender-default-badge">Default</span>{% endif %}</td>
+    <td>{{ 'Custom SMTP' if sender.smtp_server else 'Environment SMTP' }}</td>
+    <td class="sender-signoff-preview">{{ sender.signoff|truncate(72, True) if sender.signoff else '—' }}</td>
+    <td><div class="sender-actions">
+      <button type="button" class="sender-icon-button" aria-label="View {{ sender.email }}" title="View" data-sender-view data-email="{{ sender.email }}" data-signoff="{{ sender.signoff }}" data-server="{{ sender.smtp_server or 'Environment SMTP' }}" data-port="{{ sender.smtp_port or '' }}" data-username="{{ sender.smtp_username or '' }}" data-tls="{{ 'Enabled' if sender.smtp_use_tls else 'Disabled' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+      <a class="sender-icon-button" aria-label="Edit {{ sender.email }}" title="Edit" href="{{ url_for('email.settings', edit=sender.id) }}#sender-form"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 16.5-.8 4.3 4.3-.8L20 7.5 16.5 4 4 16.5Z"/><path d="m14.8 5.7 3.5 3.5"/></svg></a>
+      <form method="post" onsubmit="return confirm('Delete this sender email?')"><input type="hidden" name="sender_id" value="{{ sender.id }}"><button class="sender-icon-button sender-delete-button" type="submit" name="action" value="delete" aria-label="Delete {{ sender.email }}" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button></form>
+    </div></td>
+  </tr>{% endfor %}</tbody></table></div>{% else %}<p>No sender addresses saved.</p>{% endif %}</div>
+</section></main>
+<dialog class="sender-details-dialog" id="sender-details-dialog" aria-labelledby="sender-dialog-title">
+  <div class="sender-dialog-heading"><h2 id="sender-dialog-title">Sender details</h2><button type="button" class="sender-dialog-close" aria-label="Close">×</button></div>
+  <dl><div><dt>Email address</dt><dd id="sender-dialog-email"></dd></div><div><dt>SMTP server</dt><dd id="sender-dialog-server"></dd></div><div><dt>SMTP port</dt><dd id="sender-dialog-port"></dd></div><div><dt>SMTP username</dt><dd id="sender-dialog-username"></dd></div><div><dt>STARTTLS</dt><dd id="sender-dialog-tls"></dd></div><div><dt>Sign-off</dt><dd id="sender-dialog-signoff" class="sender-dialog-signoff"></dd></div></dl>
+</dialog>
+<script>
+(() => {
+  const dialog = document.getElementById('sender-details-dialog');
+  if (!dialog) return;
+  const fields = {
+    email: document.getElementById('sender-dialog-email'),
+    server: document.getElementById('sender-dialog-server'),
+    port: document.getElementById('sender-dialog-port'),
+    username: document.getElementById('sender-dialog-username'),
+    tls: document.getElementById('sender-dialog-tls'),
+    signoff: document.getElementById('sender-dialog-signoff'),
+  };
+  document.querySelectorAll('[data-sender-view]').forEach(button => button.addEventListener('click', () => {
+    fields.email.textContent = button.dataset.email;
+    fields.server.textContent = button.dataset.server;
+    fields.port.textContent = button.dataset.port || '—';
+    fields.username.textContent = button.dataset.username || '—';
+    fields.tls.textContent = button.dataset.tls;
+    fields.signoff.textContent = button.dataset.signoff || '—';
+    dialog.showModal();
+  }));
+  dialog.querySelector('.sender-dialog-close').addEventListener('click', () => dialog.close());
+  dialog.addEventListener('click', event => { if (event.target === dialog) dialog.close(); });
+})();
+</script>
+{% endblock %}

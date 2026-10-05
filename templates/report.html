@@ -1,20 +1,70 @@
 {% extends "base.html" %}
 
-{% block title %}DesFlyer | Report{% endblock %}
+{% block title %}DesFlyer | Email Report{% endblock %}
 
 {% block content %}
 <main class="insights-page">
     <header class="insights-header">
         <div>
-            <p class="eyebrow">WORKSPACE</p>
-            <h1>Report</h1>
-            <p class="insights-subtitle">Your report page is ready for the content you want to add.</p>
+            <p class="eyebrow">EMAIL ACTIVITY</p>
+            <h1>Email Report</h1>
+            <p class="insights-subtitle">Factual send results and recorded email activity.</p>
         </div>
+        <a class="insights-action" href="{{ url_for('email.history') }}">Open email history <span aria-hidden="true">→</span></a>
     </header>
-    <section class="report-placeholder" aria-label="Report workspace">
-        <div class="report-placeholder-icon" aria-hidden="true">▤</div>
-        <h2>Report workspace</h2>
-        <p>This page is set up and ready for your report details.</p>
+
+    <section class="analytics-stats report-stats" aria-label="Email report totals">
+        <article class="analytics-stat-card"><span class="analytics-stat-icon blue" aria-hidden="true">✉</span><p>Final email results</p><strong>{{ total_results }}</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon green" aria-hidden="true">✓</span><p>Successfully sent</p><strong>{{ sent_count }}</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon red" aria-hidden="true">!</span><p>Failed</p><strong>{{ failed_count }}</strong></article>
+        <article class="analytics-stat-card"><span class="analytics-stat-icon amber" aria-hidden="true">↘</span><p>Bounce suppressions</p><strong>{{ bounce_suppression_count }}</strong></article>
+    </section>
+
+    <section class="analytics-panel report-campaigns">
+        <div class="analytics-panel-heading">
+            <div><h2>Email results</h2><p>Most recent final send records, with recipient and campaign details</p></div>
+            <span class="chart-period">LATEST 200 RESULTS</span>
+        </div>
+        <div class="table-wrapper">
+            <table class="email-table report-email-table">
+                <thead><tr><th>Date and time</th><th>Recipient</th><th>Campaign</th><th>Subject</th><th>CC</th><th>Status</th><th>Error</th><th>Details</th></tr></thead>
+                <tbody>
+                    {% for email in emails %}
+                    <tr>
+                        <td>{% if email.sent_at %}{{ email.sent_at|ist }}{% else %}{{ email.created_at|india_local }}{% endif %}</td>
+                        <td>{{ email.recipient }}</td>
+                        <td>{{ campaign_names.get(email.id, 'Individual email') }}</td>
+                        <td>{{ email.subject }}</td>
+                        <td>{{ email.cc or '—' }}</td>
+                        <td><span class="status {{ 'sent-status' if email.status == 'SENT' else 'failed-status' }}">{{ email.status }}</span></td>
+                        <td>{{ email.error_message or '—' }}</td>
+                        <td><a href="{{ url_for('email.email_detail', email_id=email.id) }}">View</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="report-empty">No final email results are recorded yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="analytics-panel report-campaigns">
+        <div class="analytics-panel-heading">
+            <div><h2>Recorded bounce suppressions</h2><p>Recipients currently recorded in the suppression list for bounce reason</p></div>
+        </div>
+        <div class="table-wrapper">
+            <table class="email-table report-bounce-table">
+                <thead><tr><th>Recipient</th><th>Reason</th><th>Recorded at</th></tr></thead>
+                <tbody>
+                    {% for suppression in bounce_suppressions %}
+                    <tr><td>{{ suppression.email }}</td><td>{{ suppression.reason }}</td><td>{{ suppression.created_at|ist }}</td></tr>
+                    {% else %}
+                    <tr><td colspan="3" class="report-empty">No bounce suppressions are recorded.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <p class="report-data-note">The project records sent/failed results and bounce suppressions. It does not receive provider bounce events, so a delivery bounce rate is not available.</p>
     </section>
 </main>
 {% endblock %}

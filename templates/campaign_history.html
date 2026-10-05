@@ -1,5 +1,5 @@
 {% extends "base.html" %}{% block title %}Campaign History{% endblock %}{% block content %}
-<div class="page-container"><div class="page-header"><div><h1>Campaign History</h1><p>Individual delivery tracking for queued campaigns</p></div><a class="btn btn-primary" href="{{ url_for('email.send') }}">New Campaign</a></div>
+<div class="page-container"><div class="page-header campaign-history-header"><div><h1>Campaign History</h1><p>Individual delivery tracking for queued campaigns</p></div><a class="btn btn-primary" href="{{ url_for('email.send') }}">New Campaign</a></div>
 <div class="records-card"><div class="table-wrapper"><table class="email-table"><thead><tr><th>Campaign</th><th>Subject</th><th>Total</th><th>Sent</th><th>Failed</th><th>Status</th><th>Created</th></tr></thead><tbody>
 {% for campaign in campaigns %}<tr><td><a href="{{ url_for('email.campaign_detail', campaign_id=campaign.id) }}">{{ campaign.name }}</a></td><td>{{ campaign.subject }}</td><td>{{ campaign.total_recipients }}</td><td>{{ campaign.sent_count }}</td><td>{{ campaign.failed_count }}</td><td>{{ campaign.status }}</td><td>{{ campaign.created_at|ist }}</td></tr>{% else %}<tr><td colspan="7">No campaigns queued.</td></tr>{% endfor %}
 </tbody></table></div></div>
